@@ -1,0 +1,24 @@
+# http://editorconfig.org
+
+root = true
+
+[*]
+indent_style = space
+indent_size = 4
+trim_trailing_whitespace = true
+insert_final_newline = true
+charset = utf-8
+end_of_line = lf
+
+[*.py]
+quote_type = single
+max_line_length = 100
+# Recommend soft max line length of 80, with < 70 preferred
+
+[*.bat]
+indent_style = tab
+end_of_line = crlf
+
+[*.html]
+quote_type = double
+indent_size = 2
