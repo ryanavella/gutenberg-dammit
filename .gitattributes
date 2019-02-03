@@ -1,0 +1,3 @@
+# Text
+*.py 		text eol=lf
+*.pyw 		text eol=lf
