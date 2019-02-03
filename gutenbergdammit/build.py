@@ -1,34 +1,40 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 import sys
 import pathlib
+import json
+
 from os.path import join as opj
 from zipfile import BadZipFile
-import json
 
 from gutenbergdammit import text_info_iter, get_plain_text
 from gutenbergdammit.textcleaner import TextCleaner
 
+
 def err(*args):
     print(*args, file=sys.stderr)
 
+
 if __name__ == '__main__':
-    
     from optparse import OptionParser
+
     parser = OptionParser()
     parser.add_option("-s", "--src-path",
-            help="path to GutenTag dump",
-            default="./PGUS")
+                      help="path to GutenTag dump",
+                      default="./PGUS")
     parser.add_option("-d", "--dest-path",
-            help="path to output (will be created if it doesn't exist)",
-            default="./gutenberg-dammit")
+                      help="path to output (will be created if it doesn't exist)",
+                      default="./gutenberg-dammit")
     parser.add_option("-m", "--metadata-file",
-            help="path to metadata file for output (will be overwritten)",
-            default="./gutenberg-metadata.json")
+                      help="path to metadata file for output (will be overwritten)",
+                      default="./gutenberg-metadata.json")
     parser.add_option("-l", "--limit", type="int",
-            help="limit to n entries (good for testing)",
-            default=None)
+                      help="limit to n entries (good for testing)",
+                      default=None)
     parser.add_option("-o", "--offset", type="int",
-            help="start at index n (good for testing)",
-            default=0)
+                      help="start at index n (good for testing)",
+                      default=0)
     options, _ = parser.parse_args()
 
     errors = []
@@ -42,7 +48,7 @@ if __name__ == '__main__':
             continue
         try:
             raw_text = get_plain_text(item["href"], item["charset"],
-                    corpus_dir=options.src_path)
+                                      corpus_dir=options.src_path)
             cleaned = cleaner.clean_text(raw_text)
             num_str = str(int(item["Num"])).zfill(5)
             num_fragment = num_str[:-2]
@@ -75,4 +81,3 @@ if __name__ == '__main__':
         print("Errors:")
         for item in errors:
             print("*", item[0]["Num"], item[0]["href"], ":", item[1])
-

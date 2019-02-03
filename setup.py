@@ -1,6 +1,9 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 from setuptools import setup
-    
-with open('README.md') as readme_file:
+from setuptools import find_packages
+
+with open('README.md', encoding='UTF-8') as readme_file:
     readme = readme_file.read()
 
 setup(
@@ -11,7 +14,7 @@ setup(
     url='https://github.com/aparrish/gutenbergdammit',
     description='Extract plain text and metadata from the GutenTag dump',
     long_description=readme,
-    packages=setuptools.find_packages(),
+    packages=find_packages(),
     install_requires=[
         'chardet',
     ],

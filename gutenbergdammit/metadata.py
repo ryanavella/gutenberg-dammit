@@ -1,40 +1,51 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 # code based on/adapted from https://github.com/julianbrooke/GutenTag
 # Creative Commons Attribution-ShareAlike 4.0 International
 
 import codecs
+
 from collections import defaultdict
+
 
 def fix_year(year_string):
     year_string = year_string.replace("?", "")
     year_string = year_string.replace("AD", "")
     if "BC" in year_string:
         BC = True
-        year_string = year_string.replace("BC"," ")
+        year_string = year_string.replace("BC", " ")
     else:
         BC = False
     try:
         year = int(year_string)
         if BC:
             year = -year
-    except:
+    except ValueError:
         year = "?"
     return year
 
+
 class MetadataReader:
+    wanted_tags = {"Author",
+                   "Title",
+                   "LoC Class",
+                   "Subject",
+                   "Language",
+                   "Copyright Status"}
 
-    wanted_tags = set(["Author","Title", "LoC Class", "Subject", "Language",
-        "Copyright Status"])
-
-    def get_metatag_contents(self,html,tag):
+    @staticmethod
+    def get_metatag_contents(html, tag):
         index = html.find('<th scope="row">%s</th>' % tag)
         result = []
         while index != -1:
-            result.append(html[html.find("<td>",index) + 4 :html.find(
-                "</td>", index)].replace("&amp;","&"))
+            result.append(html[html.find("<td>", index) + 4:html.find(
+                "</td>", index)].replace("&amp;", "&"))
             index = html.find('<th scope="row">%s</th>' % tag, index + 1)
         return result
 
-    def expand_author(self,tags):
+    @staticmethod
+    def expand_author(tags):
         if "Author" not in tags:
             return
         authors = tags["Author"]
@@ -60,7 +71,6 @@ class MetadataReader:
                 if len(parts) == 2:
                     given = parts[0]
                     surname = parts[1]
-                    found_names = True
 
             if given:
                 tags["Author Given"].append(given)
@@ -69,7 +79,7 @@ class MetadataReader:
             if surname:
                 tags["Author Surname"].append(surname)
             else:
-                tags["Author Surname"].append("?")            
+                tags["Author Surname"].append("?")
             if birth:
                 tags["Author Birth"].append(birth)
             else:
@@ -81,65 +91,65 @@ class MetadataReader:
 
             tags["Author"].append(author)
 
-    def get_href_and_charset(self,html_text):
+    @staticmethod
+    def get_href_and_charset(html_text):
         index = html_text.find("text/plain")
         if index == -1:
-            return None,-1
+            return None, -1
         index = html_text.find('charset="', index)
         if index == -1:
             charset = "utf-8"
             index = html_text.find("text/plain")
-        else:            
-            charset = html_text[index + 9:html_text.find('"',index + 9)]
+        else:
+            charset = html_text[index + 9:html_text.find('"', index + 9)]
         index = html_text.find(' href="', index)
         if index == -1:
             href = None
         else:
-            href = html_text[index + 9:html_text.find('"',index + 9)]
+            href = html_text[index + 9:html_text.find('"', index + 9)]
 
         return href, charset
 
-    def get_PG_metadata(self,filename):
+    def get_PG_metadata(self, filename):
         f = codecs.open(filename, encoding="utf-8")
         html_text = f.read()
         f.close()
         tag_dict = {}
         for tag in self.wanted_tags:
-            tag_dict[tag] = self.get_metatag_contents(html_text,tag)
+            tag_dict[tag] = self.get_metatag_contents(html_text, tag)
         self.expand_author(tag_dict)
         for i in range(len(tag_dict["Title"])):
-            tag_dict["Title"][i] = tag_dict["Title"][i].replace("\n","\t")
+            tag_dict["Title"][i] = tag_dict["Title"][i].replace("\n", "\t")
         href, charset = self.get_href_and_charset(html_text)
-        return href,charset,tag_dict
+        return href, charset, tag_dict
 
 
 class MetadataReaderRDF:
-
     title_remove = ["&#13;"]
 
     language_lookup = {
-            "en":"English",
-            "fr":"French",
-            "es":"Spanish",
-            "de":"German",
-            "pt":"Portuguese",
-            "ja":"Japanese",
-            "zh":"Chinese",
-            "ru":"Russian",
-            "ar":"Arabic",
-            "pl":"Polish",
-            "it":"Italian",
-            "el":"Greek",
-            "he":"Hebrew",
-            "ko":"Korean",
-            "hi":"Hindi",
-            "la":"Latin",
-            "nl":"Dutch",
-            "sv":"Swedish",
-            "no":"Norweigan",
-            "fi":"Finnish"}
+        "en": "English",
+        "fr": "French",
+        "es": "Spanish",
+        "de": "German",
+        "pt": "Portuguese",
+        "ja": "Japanese",
+        "zh": "Chinese",
+        "ru": "Russian",
+        "ar": "Arabic",
+        "pl": "Polish",
+        "it": "Italian",
+        "el": "Greek",
+        "he": "Hebrew",
+        "ko": "Korean",
+        "hi": "Hindi",
+        "la": "Latin",
+        "nl": "Dutch",
+        "sv": "Swedish",
+        "no": "Norweigan",
+        "fi": "Finnish"}
 
-    def get_PG_metadata(self,filename):
+    def get_PG_metadata(self, filename):
         f = codecs.open(filename, encoding="utf-8")
         tag_dict = defaultdict(list)
         in_subject = False
@@ -154,7 +164,7 @@ class MetadataReaderRDF:
                 else:
                     end_index = -1
                 tag_dict["Title"][-1] += "\t" + line[:end_index]
-                
+
             if "<dcterms:creator>" in line:
                 in_creator = True
                 full_name = None
@@ -172,26 +182,26 @@ class MetadataReaderRDF:
 
             elif in_creator and "<pgterms:name>" in line:
                 start_index = line.find(">") + 1
-                end_index = line.find("<",start_index)
+                end_index = line.find("<", start_index)
                 name = line[start_index:end_index]
-                #if "(" in name:
+                # if "(" in name:
                 #    name = name[:name.find(" (")]
                 stuff = name.split(', ')
                 if len(stuff) == 2:
                     first_name = stuff[1]
                     last_name = stuff[0]
-            
+
                 stuff.reverse()
                 full_name = " ".join(stuff)
-                #print full_name
+                # print full_name
             elif in_creator and "pgterms:birthdate" in line:
                 start_index = line.find(">") + 1
-                end_index = line.find("<",start_index)
+                end_index = line.find("<", start_index)
                 birth_year = line[start_index:end_index]
                 birth_year = fix_year(birth_year)
             elif in_creator and "pgterms:deathdate" in line:
                 start_index = line.find(">") + 1
-                end_index = line.find("<",start_index)
+                end_index = line.find("<", start_index)
                 death_year = line[start_index:end_index]
                 death_year = fix_year(death_year)
             elif "<dcterms:subject>" in line:
@@ -207,7 +217,7 @@ class MetadataReaderRDF:
                         tag_dict["Subject"].append(value)
             elif in_subject and "<rdf:value>" in line:
                 start_index = line.find(">") + 1
-                end_index = line.find("<",start_index)
+                end_index = line.find("<", start_index)
                 value = line[start_index:end_index]
             elif in_subject and '<dcam:memberOf rdf:resource="http://purl.org/dc/terms/LCC"/>' in line:
                 is_LLC = True
@@ -220,13 +230,13 @@ class MetadataReaderRDF:
                     encodings.append("us-ascii")
             elif "<dcterms:title>" in line:
                 start_index = line.find(">") + 1
-                end_index = line.find("<",start_index)
+                end_index = line.find("<", start_index)
                 if end_index == -1:
                     add_next_line_to_title = True
                 tag_dict["Title"].append(line[start_index:end_index])
             elif "<dcterms:rights>" in line:
                 start_index = line.find(">") + 1
-                end_index = line.find("<",start_index)
+                end_index = line.find("<", start_index)
                 tag_dict["Copyright Status"] = [line[start_index:end_index]]
             elif "RFC4646" in line:
                 start_index = line.find(">") + 1
@@ -247,6 +257,5 @@ class MetadataReaderRDF:
             tag_dict["Title"].append("?")
         for i in range(len(tag_dict["Title"])):
             for to_remove in self.title_remove:
-                tag_dict["Title"][i] = tag_dict["Title"][i].replace(to_remove,"")
-        return  href,charset,tag_dict
-
+                tag_dict["Title"][i] = tag_dict["Title"][i].replace(to_remove, "")
+        return href, charset, tag_dict
