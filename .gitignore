@@ -1,3 +1,18 @@
+# ignore extensionless files
+*
+!*/
+!/**/
+!*.*
+
+# ignore dot-files
+.*
+
+# don't ignore these
+!/LICENSE
+!/.editorconfig
+!/.gitattributes
+!/.gitignore
+
 *.py[cod]
 env/
 
@@ -52,3 +67,6 @@ output
 gutenberg-metadata.json
 gutenberg-dammit-files
 *.zip
+
+# Pycharm
+.idea
