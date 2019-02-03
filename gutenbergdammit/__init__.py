@@ -53,14 +53,15 @@ def try_to_decode(raw_text, charset):
 
 
 def get_plain_text(href, charset, corpus_dir="./PGUS"):
-    # FIXME: platform-independent path joining
     # if it looks like a text file...
     if href.lower().endswith(".txt"):
-        with open(corpus_dir + href, "rb") as fh:
+        path = os.path.realpath(os.path.join(corpus_dir, href))
+        with open(path, "rb") as fh:
             raw_text = fh.read()
             return try_to_decode(raw_text, charset)
-    else: # otherwise assume zip
-        with zipfile.ZipFile(corpus_dir + href.upper()) as my_zip:
+    else:  # otherwise assume zip
+        path = os.path.realpath(os.path.join(corpus_dir, href.upper()))
+        with zipfile.ZipFile(path) as my_zip:
             with my_zip.open(my_zip.namelist()[0]) as f:
                 raw_text = f.read()
                 return try_to_decode(raw_text, charset)
