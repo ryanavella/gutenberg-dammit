@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import zipfile
 import json
+import zipfile
+
+from unicodedata import normalize
 
 
 def loadmetadata(zipfn):
@@ -29,18 +31,20 @@ def search(metadata, fields_=None, op=all):
     matches = []
     for item in metadata:
         bools = []
-        for k, v in fields_.items():
-            if k not in item:
+        for key, val in fields_.items():
+            if key not in item:
                 bools.append(False)
                 continue
-            if type(item[k]) is list:
-                search_against = "\n".join(item[k])
+            if type(item[key]) is list:
+                search_against = '\n'.join(item[key])
             else:
-                search_against = item[k]
-            if type(v) is str:
-                bools.append(v in search_against)
-            elif callable(v):
-                bools.append(v(search_against))
+                search_against = item[key]
+            search_against = normalize('NFC', search_against).lower()
+            if type(val) is str:
+                val = normalize('NFC', val).lower()
+                bools.append(val in search_against)
+            elif callable(val):
+                bools.append(val(search_against))
         if len(bools) > 0 and op(bools):
             matches.append(item)
     return matches
